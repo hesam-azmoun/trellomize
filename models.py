@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import uuid
 
+
 class User:
     def __init__(self, username, password, email, is_active=True):
         self.username = username
@@ -8,18 +9,29 @@ class User:
         self.email = email
         self.is_active = is_active
 
-class TaskStatus:
-    BACKLOG = "BACKLOG"
-    TODO = "TODO"
-    DOING = "DOING"
-    DONE = "DONE"
-    ARCHIVED = "ARCHIVED"
+
+from enum import Enum
+
+
+class TaskStatus(Enum):
+    # BACKLOG = "BACKLOG"
+    # TODO = "TODO"
+    # DOING = "DOING"
+    # DONE = "DONE"
+    # ARCHIVED = "ARCHIVED"
+    BACKLOG = 0
+    TODO = 1
+    DOING = 2
+    DONE = 3
+    ARCHIVED = 4
+
 
 class TaskPriority:
     CRITICAL = "CRITICAL"
     HIGH = "HIGH"
     MEDIUM = "MEDIUM"
     LOW = "LOW"
+
 
 class Task:
     def __init__(self, title='', description='', assignees=None, priority=TaskPriority.LOW, status=TaskStatus.BACKLOG):
@@ -67,6 +79,7 @@ class Task:
         if username in self.assignees:
             self.assignees.remove(username)
 
+
 class Project:
     def __init__(self, project_id, title, owner):
         self.project_id = project_id
@@ -88,3 +101,9 @@ class Project:
 
     def remove_task(self, task_id):
         self.tasks = [task for task in self.tasks if task.task_id != task_id]
+
+
+from rich.console import Console
+from rich.table import Table
+
+
