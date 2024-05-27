@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 import uuid
+from enum import Enum
 
 
 class User:
@@ -8,9 +9,6 @@ class User:
         self.password = password
         self.email = email
         self.is_active = is_active
-
-
-from enum import Enum
 
 
 class TaskStatus(Enum):
@@ -26,15 +24,20 @@ class TaskStatus(Enum):
     ARCHIVED = 4
 
 
-class TaskPriority:
-    CRITICAL = "CRITICAL"
-    HIGH = "HIGH"
-    MEDIUM = "MEDIUM"
-    LOW = "LOW"
+class TaskPriority(Enum):
+    # CRITICAL = "CRITICAL"
+    # HIGH = "HIGH"
+    # MEDIUM = "MEDIUM"
+    # LOW = "LOW"
+    CRITICAL = 0
+    HIGH = 1
+    MEDIUM = 2
+    LOW = 3
 
 
 class Task:
-    def __init__(self, title='', description='', assignees=None, priority=TaskPriority.LOW, status=TaskStatus.BACKLOG):
+    def __init__(self, title='', description='', assignees=None, priority=TaskPriority.LOW.name,
+                 status=TaskStatus.BACKLOG.name):
         if assignees is None:
             assignees = []
         self.task_id = str(uuid.uuid4())
@@ -48,6 +51,27 @@ class Task:
         self.history = []
         self.comments = []
 
+    def set_id(self, task_id):
+        self.task_id = task_id
+
+    def get_id(self):
+        return self.task_id
+
+    # def set_end_time(datetime.now()):
+
+    def add_history(self, change, user, time):
+        self.history.append({'change': change, 'user': user, 'time': time})
+
+    def already_history(self, list_history=None):
+        if list_history is None:
+            list_history = []
+        self.history = list_history
+
+    def already_comment(self, list_comment=None):
+        if list_comment is None:
+            list_comment = []
+        self.comments = list_comment
+
     def add_comment(self, username, content):
         self.comments.append({
             'username': username,
@@ -55,21 +79,21 @@ class Task:
             'timestamp': datetime.now().isoformat()
         })
 
-    def update_status(self, status, username):
+    def update_status(self, status):
         self.status = status
-        self.history.append({
-            'user': username,
-            'timestamp': datetime.now().isoformat(),
-            'action': f"Status updated to {status}"
-        })
+        # self.history.append({
+        #     'user': username,
+        #     'timestamp': datetime.now().isoformat(),
+        #     'action': f"Status updated to {status}"
+        # })
 
-    def update_priority(self, priority, username):
+    def update_priority(self, priority):
         self.priority = priority
-        self.history.append({
-            'user': username,
-            'timestamp': datetime.now().isoformat(),
-            'action': f"Priority updated to {priority}"
-        })
+        # self.history.append({
+        #     'user': username,
+        #     'timestamp': datetime.now().isoformat(),
+        #     'action': f"Priority updated to {priority}"
+        # })
 
     def assign_user(self, username):
         if username not in self.assignees:
@@ -78,6 +102,12 @@ class Task:
     def unassign_user(self, username):
         if username in self.assignees:
             self.assignees.remove(username)
+
+    def update_title(self, title):
+        self.title = title
+
+    def update_description(self, description):
+        self.description = description
 
 
 class Project:
@@ -103,7 +133,6 @@ class Project:
         self.tasks = [task for task in self.tasks if task.task_id != task_id]
 
 
+print(type(datetime.now()))
 from rich.console import Console
 from rich.table import Table
-
-
