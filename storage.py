@@ -1,39 +1,40 @@
 import json
 import os
 
-DATA_DIR = 'data'
-USERS_FILE = os.path.join(DATA_DIR, 'users.json')
-PROJECTS_FILE = os.path.join(DATA_DIR, 'projects.json')
-ADMIN_FILE = os.path.join(DATA_DIR, 'admin.json')
+class Storage:
+    DATA_DIR = 'data'
+    USERS_FILE = os.path.join(DATA_DIR, 'users.json')
+    PROJECTS_FILE = os.path.join(DATA_DIR, 'projects.json')
+    ADMIN_FILE = os.path.join(DATA_DIR, 'admin.json')
 
+    @staticmethod
+    def load_data(file_path):
+        if not os.path.exists(file_path):
+            return {}
+        with open(file_path, 'r') as file:
+            return json.load(file)
 
-def load_data(file_path):
-    if not os.path.exists(file_path):
-        return {}
-    with open(file_path, 'r') as file:
-        return json.load(file)
+    @staticmethod
+    def save_data(file_path, data):
+        with open(file_path, 'w') as file:
+            json.dump(data, file, default=str)
 
+    @staticmethod
+    def load_users():
+        return Storage.load_data(Storage.USERS_FILE)
 
-def save_data(file_path, data):
-    with open(file_path, 'w') as file:
-        json.dump(data, file)
+    @staticmethod
+    def save_users(users):
+        Storage.save_data(Storage.USERS_FILE, users)
 
+    @staticmethod
+    def load_projects():
+        return Storage.load_data(Storage.PROJECTS_FILE)
 
-def load_users():
-    return load_data(USERS_FILE)
+    @staticmethod
+    def save_projects(projects):
+        Storage.save_data(Storage.PROJECTS_FILE, projects)
 
-
-def save_users(users):
-    save_data(USERS_FILE, users)
-
-
-def load_projects():
-    return load_data(PROJECTS_FILE)
-
-
-def save_projects(projects):
-    save_data(PROJECTS_FILE, projects)
-
-
-def load_admin():
-    return load_data(ADMIN_FILE)
+    @staticmethod
+    def load_admin():
+        return load_data(ADMIN_FILE)

@@ -1,8 +1,8 @@
 import hashlib
 from models import User, Project, Task, TaskPriority, TaskStatus
-import storage
+from storage import Storage
 from logger import log, log1
-from utils import hash_password, validate_email, validate_username
+from utils import Utils
 from rich.console import Console
 from rich.table import Table
 from rich.prompt import Prompt
@@ -15,25 +15,25 @@ loop_task_def = None
 
 
 def create_user(username, password, email) -> None:
-    users = storage.load_users()
+    users = Storage.load_users()
     if username in users or any(user['email'] == email for user in users.values()):
         console.print("Error: Username or email already exists.", style="bold red")
         return
 
-    if not validate_email(email):
+    if not Utils.validate_email(email):
         console.print("Error: Invalid email format.", style="bold red")
         return
 
-    if not validate_username(username):
+    if not Utils.validate_username(username):
         console.print("Error: Invalid username format.", style="bold red")
         return
 
     users[username] = {
-        'password': hash_password(password),
+        'password': Utils.hash_password(password),
         'email': email,
         'is_active': True
     }
-    storage.save_users(users)
+    Storage.save_users(users)
     if email == "admin@gmail.com":
         log(f"Admin created: {username}")
         log1.info(f"Admin created: {username}")
@@ -44,8 +44,8 @@ def create_user(username, password, email) -> None:
 
 
 def authenticate(username, password) -> bool:
-    users = storage.load_users()
-    if username not in users or users[username]['password'] != hash_password(password):
+    users = Storage.load_users()
+    if username not in users or users[username]['password'] != Utils.hash_password(password):
         return False
     if not users[username]['is_active']:
         console.print("Error: Account is inactive.", style="bold red")
@@ -56,8 +56,8 @@ def authenticate(username, password) -> bool:
 
 
 def deactivate_user(username) -> None:
-    users = storage.load_users()
-    admin = storage.load_admin()
+    users = Storage.load_users()
+    admin = Storage.load_admin()
 
     if current_user != admin["username"]:
         console.print("Error: Only the leader can deactivate members.", style="bold red")
@@ -67,15 +67,15 @@ def deactivate_user(username) -> None:
         return
 
     users[username]['is_active'] = False
-    storage.save_users(users)
+    Storage.save_users(users)
     log(f"User deactivated: {username}")
     log1.info(f"User deactivated: {username}")
     console.print(f"User {username} deactivated.", style="bold green")
 
 
 def create_project(project_id, title) -> None:
-    projects = storage.load_projects()
-    users = storage.load_users()
+    projects = Storage.load_projects()
+    users = Storage.load_users()
 
     if project_id in projects:
         console.print("Error: Project ID already exists.", style="bold red")
@@ -89,14 +89,14 @@ def create_project(project_id, title) -> None:
         'members': [current_user],
         'tasks': []
     }
-    storage.save_projects(projects)
+    Storage.save_projects(projects)
     log(f"Project created: {project_id} by {current_user}")
     log1.info(f"Project created: {project_id} by {current_user}")
     console.print("Project created successfully.", style="bold green")
 
 
 def remove_project(project_id) -> None:
-    projects = storage.load_projects()
+    projects = Storage.load_projects()
     if project_id not in projects:
         console.print("Error: Project not found.", style="bold red")
         return
@@ -105,15 +105,15 @@ def remove_project(project_id) -> None:
         console.print("Error: Only the project owner can remove project.", style="bold red")
         return
     projects.pop(project_id)
-    storage.save_projects(projects)
+    Storage.save_projects(projects)
     log(f"User {current_user} removed project {project_id}")
     log1.info(f"User {current_user} removed from project {project_id}")
     console.print("Project removed successfully.", style="bold green")
 
 
 def add_member_to_project(project_id, username) -> None:
-    projects = storage.load_projects()
-    users = storage.load_users()
+    projects = Storage.load_projects()
+    users = Storage.load_users()
 
     if project_id not in projects:
         console.print("Error: Project not found.", style="bold red")
@@ -130,14 +130,14 @@ def add_member_to_project(project_id, username) -> None:
 
     if username not in project['members']:
         project['members'].append(username)
-        storage.save_projects(projects)
+        Storage.save_projects(projects)
         log(f"User {username} added to project {project_id}")
         log1.info(f"User {username} added to project {project_id}")
         console.print("Member added successfully.", style="bold green")
 
 
 def remove_member_from_project(project_id, username) -> None:
-    projects = storage.load_projects()
+    projects = Storage.load_projects()
 
     if project_id not in projects:
         console.print("Error: Project not found.", style="bold red")
@@ -150,7 +150,7 @@ def remove_member_from_project(project_id, username) -> None:
 
     if username in project['members']:
         project['members'].remove(username)
-        storage.save_projects(projects)
+        Storage.save_projects(projects)
         log(f"User {username} removed from project {project_id}")
         log1.info(f"User {username} removed from project {project_id}")
         console.print("Member removed successfully.", style="bold green")
@@ -159,8 +159,8 @@ def remove_member_from_project(project_id, username) -> None:
 
 
 def add_task_to_project(project_id: str, title: str, description: str, assignees: list) -> None:
-    projects = storage.load_projects()
-    users = storage.load_users()
+    projects = Storage.load_projects()
+    users = Storage.load_users()
 
     if project_id not in projects:
         console.print("Error: Project not found.", style="bold red")
@@ -187,7 +187,7 @@ def add_task_to_project(project_id: str, title: str, description: str, assignees
         'history': task.history,
         'comments': task.comments
     })
-    storage.save_projects(projects)
+    Storage.save_projects(projects)
     log(f"Task '{title}' added to project '{project_id}'")
     log1.info(f"Task '{title}' added to project '{project_id}'")
     console.print("Task added successfully.", style="bold green")
@@ -196,7 +196,7 @@ def add_task_to_project(project_id: str, title: str, description: str, assignees
 def list_project() -> None:
     leader = []
     member = []
-    projects = storage.load_projects()
+    projects = Storage.load_projects()
     for key, value in projects.items():
         if value['owner'] == current_user:
             leader.append(key)
@@ -265,7 +265,7 @@ def edit_task(project_id, projects, loop_task, location, location_task_id):
                 'history': my_task.history,
                 'comments': selected_task["comments"]
             })
-            storage.save_projects(projects)
+            Storage.save_projects(projects)
         elif choice == "2":
             description = Prompt.ask("Enter task description")
             my_task.update_description(description)
@@ -285,7 +285,7 @@ def edit_task(project_id, projects, loop_task, location, location_task_id):
                 'history': my_task.history,
                 'comments': selected_task["comments"]
             })
-            storage.save_projects(projects)
+            Storage.save_projects(projects)
         elif choice == "3":
             my_task.set_id(task_id)
             log1.info(f"{current_user} changed end_time the task {task_id} in the project {project_id}")
@@ -303,7 +303,7 @@ def edit_task(project_id, projects, loop_task, location, location_task_id):
                 'history': my_task.history,
                 'comments': selected_task["comments"]
             })
-            storage.save_projects(projects)
+            Storage.save_projects(projects)
         elif choice == "4":
             console.print(f"[blue]Changing priority from [green]{selected_task['priority']}[blue] to ...")
             console.print("1. LOW")
@@ -336,7 +336,7 @@ def edit_task(project_id, projects, loop_task, location, location_task_id):
                 'history': my_task.history,
                 'comments': selected_task["comments"]
             })
-            storage.save_projects(projects)
+            Storage.save_projects(projects)
         elif choice == "5":
             console.print(f"[blue]Changing status from [green]{selected_task["status"]}[blue] to ...")
             console.print("1. BACKLOG")
@@ -372,7 +372,7 @@ def edit_task(project_id, projects, loop_task, location, location_task_id):
                 'history': my_task.history,
                 'comments': selected_task["comments"]
             })
-            storage.save_projects(projects)
+            Storage.save_projects(projects)
         elif choice == "6":
             my_task.set_id(task_id)
             my_task.already_comment(selected_task["comments"])
@@ -393,7 +393,7 @@ def edit_task(project_id, projects, loop_task, location, location_task_id):
                 'history': my_task.history,
                 'comments': my_task.comments
             })
-            storage.save_projects(projects)
+            Storage.save_projects(projects)
         elif choice == "7":
             if current_user != project['owner']:
                 console.print("Error: Only the project owner can remove member from task.", style="bold red")
@@ -424,7 +424,7 @@ def edit_task(project_id, projects, loop_task, location, location_task_id):
                 'history': my_task.history,
                 'comments': selected_task["comments"]
             })
-            storage.save_projects(projects)
+            Storage.save_projects(projects)
         elif choice == "8":
             if current_user != project['owner']:
                 console.print("Error: Only the project owner can add member in the task.", style="bold red")
@@ -456,9 +456,9 @@ def edit_task(project_id, projects, loop_task, location, location_task_id):
                 'history': my_task.history,
                 'comments': selected_task["comments"]
             })
-            storage.save_projects(projects)
+            Storage.save_projects(projects)
         elif choice == "9":
-            storage.save_projects(projects)
+            Storage.save_projects(projects)
             log1.info(f"task {task_id} removed")
         elif choice == "10":
             global loop_task_def
@@ -471,7 +471,7 @@ def edit_task(project_id, projects, loop_task, location, location_task_id):
 
 
 def view_project_tasks(project_id: str) -> None:
-    projects = storage.load_projects()
+    projects = Storage.load_projects()
 
     if project_id not in projects:
         console.print("Error: Project not found.", style="bold red")
@@ -574,7 +574,7 @@ def main_menu() -> None:
             project_id = Prompt.ask("Enter project ID")
 
             while loop_project == 0:
-                projects = storage.load_projects()
+                projects = Storage.load_projects()
 
                 if project_id not in projects:
                     console.print("Error: Project not found.", style="bold red")
