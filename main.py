@@ -1,7 +1,7 @@
 import hashlib
 from models import User, Project, Task, TaskPriority, TaskStatus
 from storage import Storage
-from logger import log, log1
+from logger import log1
 from utils import Utils
 from rich.console import Console
 from rich.table import Table
@@ -14,7 +14,8 @@ current_user = None
 loop_task_def = None
 
 
-def create_user(username, password, email) -> None:
+def create_user(username: str, password: str, email: str) -> None:
+    """A user builds and stores the information in the users.json ."""
     users = Storage.load_users()
     if username in users or any(user['email'] == email for user in users.values()):
         console.print("Error: Username or email already exists.", style="bold red")
@@ -35,15 +36,16 @@ def create_user(username, password, email) -> None:
     }
     Storage.save_users(users)
     if email == "admin@gmail.com":
-        log(f"Admin created: {username}")
+
         log1.info(f"Admin created: {username}")
     else:
-        log(f"User created: {username}")
+
         log1.info(f"User created: {username}")
         console.print("User created successfully.", style="bold green")
 
 
-def authenticate(username, password) -> bool:
+def authenticate(username: str, password: str) -> bool:
+    """Check the validity of a username and password."""
     users = Storage.load_users()
     if username not in users or users[username]['password'] != Utils.hash_password(password):
         return False
@@ -55,7 +57,8 @@ def authenticate(username, password) -> bool:
     return True
 
 
-def deactivate_user(username) -> None:
+def deactivate_user(username: str) -> None:
+    """"Disables the user selected by the leader"""
     users = Storage.load_users()
     admin = Storage.load_admin()
 
@@ -68,12 +71,13 @@ def deactivate_user(username) -> None:
 
     users[username]['is_active'] = False
     Storage.save_users(users)
-    log(f"User deactivated: {username}")
+
     log1.info(f"User deactivated: {username}")
     console.print(f"User {username} deactivated.", style="bold green")
 
 
-def create_project(project_id, title) -> None:
+def create_project(project_id: str, title: str) -> None:
+    """It stores the information in the projects.json ."""
     projects = Storage.load_projects()
     users = Storage.load_users()
 
@@ -90,12 +94,12 @@ def create_project(project_id, title) -> None:
         'tasks': []
     }
     Storage.save_projects(projects)
-    log(f"Project created: {project_id} by {current_user}")
     log1.info(f"Project created: {project_id} by {current_user}")
     console.print("Project created successfully.", style="bold green")
 
 
-def remove_project(project_id) -> None:
+def remove_project(project_id: str) -> None:
+    """removes a project from the projects.json file by leader."""
     projects = Storage.load_projects()
     if project_id not in projects:
         console.print("Error: Project not found.", style="bold red")
@@ -106,12 +110,12 @@ def remove_project(project_id) -> None:
         return
     projects.pop(project_id)
     Storage.save_projects(projects)
-    log(f"User {current_user} removed project {project_id}")
     log1.info(f"User {current_user} removed from project {project_id}")
     console.print("Project removed successfully.", style="bold green")
 
 
-def add_member_to_project(project_id, username) -> None:
+def add_member_to_project(project_id: str, username: str) -> None:
+    """adds a member to a project by leader."""
     projects = Storage.load_projects()
     users = Storage.load_users()
 
@@ -131,12 +135,12 @@ def add_member_to_project(project_id, username) -> None:
     if username not in project['members']:
         project['members'].append(username)
         Storage.save_projects(projects)
-        log(f"User {username} added to project {project_id}")
         log1.info(f"User {username} added to project {project_id}")
         console.print("Member added successfully.", style="bold green")
 
 
-def remove_member_from_project(project_id, username) -> None:
+def remove_member_from_project(project_id: str, username: str) -> None:
+    """removes a member from a project by leader."""
     projects = Storage.load_projects()
 
     if project_id not in projects:
@@ -151,7 +155,6 @@ def remove_member_from_project(project_id, username) -> None:
     if username in project['members']:
         project['members'].remove(username)
         Storage.save_projects(projects)
-        log(f"User {username} removed from project {project_id}")
         log1.info(f"User {username} removed from project {project_id}")
         console.print("Member removed successfully.", style="bold green")
     elif username not in project['members']:
@@ -159,6 +162,7 @@ def remove_member_from_project(project_id, username) -> None:
 
 
 def add_task_to_project(project_id: str, title: str, description: str, assignees: list) -> None:
+    """adds a task to a project by leader."""
     projects = Storage.load_projects()
     users = Storage.load_users()
 
@@ -188,12 +192,12 @@ def add_task_to_project(project_id: str, title: str, description: str, assignees
         'comments': task.comments
     })
     Storage.save_projects(projects)
-    log(f"Task '{title}' added to project '{project_id}'")
     log1.info(f"Task '{title}' added to project '{project_id}'")
     console.print("Task added successfully.", style="bold green")
 
 
 def list_project() -> None:
+    """Shows the projects list."""
     leader = []
     member = []
     projects = Storage.load_projects()
@@ -210,7 +214,8 @@ def list_project() -> None:
     console.print(table)
 
 
-def edit_task(project_id, projects, loop_task, location, location_task_id):
+def edit_task(project_id: str, projects: dict, loop_task: int, location: str, location_task_id: str) -> None:
+    """Apply the desired changes to the selected task."""
     project = projects[project_id]
     tasks = project['tasks']
     task_id = location_task_id
@@ -233,6 +238,7 @@ def edit_task(project_id, projects, loop_task, location, location_task_id):
             break
         my_task = Task(selected_task["title"], selected_task["description"], selected_task["assignees"],
                        selected_task["priority"], selected_task["status"])
+        # show menu
         console.print("1. modify title")
         console.print("2. modify description")
         console.print("3. modify end_time")
@@ -245,7 +251,7 @@ def edit_task(project_id, projects, loop_task, location, location_task_id):
         console.print("10. back")
         console.print("11. logout")
         choice = Prompt.ask("Select an option",
-                            choices=["1", "2", "3", "4", "5", "6", "7", "8", "9", "10","11"])
+                            choices=["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"])
         if choice == "1":
             title = Prompt.ask("Enter task title")
             my_task.update_title(title)
@@ -402,9 +408,9 @@ def edit_task(project_id, projects, loop_task, location, location_task_id):
             my_task.set_id(task_id)
 
             member_removed = Prompt.ask("Enter username")
-            # if not set(member_removed).issubset(set(project['members'] + [""])):
-            #     console.print("Error: All assignees must be project members.", style="bold red")
-            #     log1.info(f"{current_user} can not remove member in the task {task_id} in the project {project_id}")
+            if member_removed not in project['members'] + [""]:
+                console.print("Error: All assignees must be project members.", style="bold red")
+                log1.info(f"{current_user} can not remove member in the task {task_id} in the project {project_id}")
 
             if member_removed == current_user:
                 return
@@ -433,11 +439,10 @@ def edit_task(project_id, projects, loop_task, location, location_task_id):
             my_task.set_id(task_id)
 
             member_add = Prompt.ask("Enter username")
-            # if not set(member_add).issubset(set(project['members'] + [""])):
-            #     console.print("Error: All assignees must be project members.", style="bold red")
-            #     log1.info(f"{current_user} can not add member in the task {task_id} in the project {project_id}")
+            if member_add not in project['members'] + [""]:
+                console.print("Error: All assignees must be project members.", style="bold red")
+                log1.info(f"{current_user} can not add member in the task {task_id} in the project {project_id}")
 
-                # return
             if member_add == current_user:
                 return
             my_task.assign_user(member_add)
@@ -471,6 +476,7 @@ def edit_task(project_id, projects, loop_task, location, location_task_id):
 
 
 def view_project_tasks(project_id: str) -> None:
+    """"Shows a list of tasks for a project"""
     projects = Storage.load_projects()
 
     if project_id not in projects:
@@ -525,7 +531,6 @@ def view_project_tasks(project_id: str) -> None:
     table_task.add_column("Priority")
     table_task.add_column("Status")
 
-
     table_task.add_row(
         select_task['task_id'],
         select_task['title'],
@@ -535,8 +540,13 @@ def view_project_tasks(project_id: str) -> None:
         ", ".join(select_task['assignees']),
         select_task['priority'],
         select_task['status']
-        )
-
+    )
+    if current_user not in select_task['assignees']:
+        if not ("" in select_task['assignees'] and len(select_task["assignees"]) == 1):
+            console.print("if the tasks are empty or you are not member ,you can not see the task details",
+                          style="bold red")
+            log1.error(f"{current_user} can not see task details")
+            return
     console.print(table_task)
     project['tasks'].append({
         'task_id': select_task['task_id'],
@@ -550,13 +560,15 @@ def view_project_tasks(project_id: str) -> None:
         'history': select_task["history"],
         'comments': select_task["comments"]
     })
+    # if "" in select_task["assignees"] and len(select_task["assignees"]) == 1:
+    #     return
     loop_task = 0
-    edit_task(project_id,projects,loop_task,"View Project Tasks",input_task_id)
-
+    edit_task(project_id, projects, loop_task, "View Project Tasks", input_task_id)
 
 
 def main_menu() -> None:
     while True:
+        # show menu
         console.print(f"\nWelcome {current_user}!", style="bold blue")
         console.print("1. Create Project")
         console.print("2. Project items")
@@ -580,10 +592,11 @@ def main_menu() -> None:
                     console.print("Error: Project not found.", style="bold red")
                     break
                 check_member_project = projects[project_id]
-                # if not set(list(current_user)).issubset(set(check_member_project['members'] + [""])):
-                #     console.print("Error: Projec items are only available to its members.", style="bold red")
-                #     log1.error(f"{current_user} could not access the project {project_id}")
-                #     break
+                if current_user not in check_member_project['members']:
+                    console.print("Error: Project items are only available to its members.", style="bold red")
+                    log1.error(f"{current_user} could not access the project {project_id}")
+                    break
+                # show manage project
                 console.print(f"\nManage project {project_id}", style="bold blue")
                 console.print("1. Add Member to Project")
                 console.print("2. Remove Member from Project")
@@ -591,9 +604,10 @@ def main_menu() -> None:
                 console.print("4. View Project Tasks")
                 console.print("5. remove project")
                 console.print("6. edit task")
-                console.print("7. back")
-                console.print("8. logout")
-                choice = Prompt.ask("Select an option", choices=["1", "2", "3", "4", "5", "6", "7", "8"])
+                console.print("7. edit basic project info")
+                console.print("8. back")
+                console.print("9. logout")
+                choice = Prompt.ask("Select an option", choices=["1", "2", "3", "4", "5", "6", "7", "8", "9"])
                 if choice == "1":
                     username = Prompt.ask("Enter username to add")
                     add_member_to_project(project_id, username)
@@ -618,8 +632,22 @@ def main_menu() -> None:
                     if loop_task_def == 2:
                         loop_project = 2
                 elif choice == "7":
-                    loop_project = 1
+                    console.print("1. edit title")
+                    projects = Storage.load_projects()
+                    users = Storage.load_users()
+                    project = projects[project_id]
+                    if current_user != project['owner']:
+                        console.print("Error: Only the project owner can edited basic info", style="bold red")
+                        break
+                    edit_title = Prompt.ask("Enter project title")
+                    project["title"] = edit_title
+                    Storage.save_projects(projects)
+                    log1.info(f"User {current_user} changed the title of project {project_id}")
+
+
                 elif choice == "8":
+                    loop_project = 1
+                elif choice == "9":
                     loop_project = 2
             if loop_project == 2:
                 break

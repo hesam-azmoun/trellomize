@@ -4,7 +4,8 @@ from enum import Enum
 
 
 class User:
-    def __init__(self, username, password, email, is_active=True):
+    """create the user object"""
+    def __init__(self, username: str, password: str, email: str, is_active=True):
         self.username = username
         self.password = password
         self.email = email
@@ -12,11 +13,7 @@ class User:
 
 
 class TaskStatus(Enum):
-    # BACKLOG = "BACKLOG"
-    # TODO = "TODO"
-    # DOING = "DOING"
-    # DONE = "DONE"
-    # ARCHIVED = "ARCHIVED"
+    """a class that represents the status of the task"""
     BACKLOG = 0
     TODO = 1
     DOING = 2
@@ -25,10 +22,7 @@ class TaskStatus(Enum):
 
 
 class TaskPriority(Enum):
-    # CRITICAL = "CRITICAL"
-    # HIGH = "HIGH"
-    # MEDIUM = "MEDIUM"
-    # LOW = "LOW"
+    """"a class that represents the priority of the task"""
     CRITICAL = 0
     HIGH = 1
     MEDIUM = 2
@@ -36,6 +30,7 @@ class TaskPriority(Enum):
 
 
 class Task:
+    """a class that represents the task"""
     def __init__(self, title='', description='', assignees=None, priority=TaskPriority.LOW.name,
                  status=TaskStatus.BACKLOG.name):
         if assignees is None:
@@ -51,15 +46,16 @@ class Task:
         self.history = []
         self.comments = []
 
-    def set_id(self, task_id):
+    def set_id(self, task_id: str) -> None:
+        """"set the task id"""
         self.task_id = task_id
 
-    def get_id(self):
+    def get_id(self) -> str:
+        """"get the task id """
         return self.task_id
 
-    # def set_end_time(datetime.now()):
+    def add_history(self, change: str, user: str, time: str) -> None:
 
-    def add_history(self, change, user, time):
         self.history.append({'change': change, 'user': user, 'time': time})
 
     def already_history(self, list_history=None):
@@ -67,12 +63,12 @@ class Task:
             list_history = []
         self.history = list_history
 
-    def already_comment(self, list_comment=None):
+    def already_comment(self, list_comment=None) -> None:
         if list_comment is None:
             list_comment = []
         self.comments = list_comment
 
-    def add_comment(self, username, content):
+    def add_comment(self, username: str, content: str) -> None:
         self.comments.append({
             'username': username,
             'content': content,
@@ -95,44 +91,45 @@ class Task:
         #     'action': f"Priority updated to {priority}"
         # })
 
-    def assign_user(self, username):
+    def assign_user(self, username: str) -> None:
         if username not in self.assignees:
             self.assignees.append(username)
 
-    def unassign_user(self, username):
+    def unassign_user(self, username: str) -> None:
         if username in self.assignees:
             self.assignees.remove(username)
 
-    def update_title(self, title):
+    def update_title(self, title: str) -> None:
         self.title = title
 
-    def update_description(self, description):
+    def update_description(self, description: str) -> None:
+
         self.description = description
 
 
 class Project:
-    def __init__(self, project_id, title, owner):
+    """"a class that represents the project"""
+    def __init__(self, project_id: str, title: str, owner: str):
         self.project_id = project_id
         self.title = title
         self.owner = owner
         self.members = [owner]
         self.tasks = []
 
-    def add_member(self, user):
+    def add_member(self, user: str) -> None:
+        """"add a member to the project"""
         if user not in self.members:
             self.members.append(user)
 
-    def remove_member(self, user):
+    def remove_member(self, user: str) -> None:
+        """"remove a member from the project"""
         if user in self.members:
             self.members.remove(user)
 
-    def add_task(self, task):
+    def add_task(self, task: dict) -> None:
+        """"add a task to the project"""
         self.tasks.append(task)
 
-    def remove_task(self, task_id):
+    def remove_task(self, task_id: str) -> None:
+        """"remove a task from the project"""
         self.tasks = [task for task in self.tasks if task.task_id != task_id]
-
-
-print(type(datetime.now()))
-from rich.console import Console
-from rich.table import Table

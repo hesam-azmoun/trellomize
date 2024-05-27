@@ -1,7 +1,7 @@
 import argparse
 import json
 import os
-from utils import hash_password
+from utils import Utils
 from main import create_user
 from logger import log1
 
@@ -9,13 +9,14 @@ DATA_DIR = 'data'
 ADMIN_FILE = os.path.join(DATA_DIR, 'admin.json')
 
 
-def create_admin(username, password):
+def create_admin(username: str, password: str) -> None:
+    """admin builds and stores the information in the admin.json """
     if os.path.exists(ADMIN_FILE):
         print("Admin already exists.")
         return
     admin = {
         'username': username,
-        'password': hash_password(password)
+        'password': Utils.hash_password(password)
     }
     with open(ADMIN_FILE, 'w') as f:
         json.dump(admin, f)
@@ -23,7 +24,7 @@ def create_admin(username, password):
     print("Admin created successfully.")
 
 
-def purge_data():
+def purge_data() -> None:
     try:
         os.remove("data/admin.json")
         print(f"Amin data deleted.")
