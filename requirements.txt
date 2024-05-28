@@ -1,0 +1,12 @@
+colorama==0.4.6
+iniconfig==2.0.0
+loguru==0.7.2
+markdown-it-py==3.0.0
+mdurl==0.1.2
+packaging==24.0
+pluggy==1.5.0
+Pygments==2.18.0
+pytest==8.2.0
+rich==13.7.1
+uuid==1.30
+win32-setctime==1.1.0

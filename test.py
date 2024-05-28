@@ -20,8 +20,8 @@ class TestProjectManagement(unittest.TestCase):
         task = Task('Test Task', 'Description of the task')
         self.assertEqual(task.title, 'Test Task')
         self.assertEqual(task.description, 'Description of the task')
-        self.assertEqual(task.priority, TaskPriority.LOW)
-        self.assertEqual(task.status, TaskStatus.BACKLOG)
+        self.assertEqual(task.priority, TaskPriority.LOW.name)
+        self.assertEqual(task.status, TaskStatus.BACKLOG.name)
 
     def test_add_member_to_project(self):
         owner = User('testuser', 'password123', 'testuser@example.com')
